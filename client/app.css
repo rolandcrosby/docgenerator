@@ -15,6 +15,8 @@ form,
 ul,
 li,
 blockquote,
+fieldset,
+legend,
 input,
 select,
 button,
@@ -59,6 +61,11 @@ header button {
   color: var(--purple);
 }
 
+main button {
+  background: var(--purple);
+  color: var(--white);
+}
+
 main {
   background-image: linear-gradient(to bottom, var(--shadow), var(--white));
   background-position: top left;
@@ -78,4 +85,24 @@ main {
 .roundButton:hover {
   transform: translate(1px, 1px);
   box-shadow: -1px 0px 3px var(--shadow);
+}
+
+fieldset {
+  border: 1px solid var(--purple);
+  border-width: 0 0 1px;
+}
+
+legend {
+  padding-inline: 0;
+  border-bottom: 2px solid var(--purple);
+  width: 100%;
+  font-weight: bold;
+}
+
+.disabled {
+  opacity: 0.5;
+}
+
+.error {
+  background: pink;
 }

@@ -11,7 +11,7 @@ const zip = require("jszip");
 const { Template } = require('./template.js');
 
 const backendState = {
-  template: null,
+  template: null
 };
 
 function setupIPC() {
@@ -37,11 +37,13 @@ function setupIPC() {
         fields: backendState.template.inputFieldList
       };
     } catch (e) {
-      console.log(e.stack);
       return e;
     }
-    return;
   });
+  ipcMain.handle("evaluate-template", (_event, values) => {
+    const result = backendState.template.evaluate(values);
+    return result;
+  })
 }
 
 function startRenderer() {

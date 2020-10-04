@@ -6,6 +6,7 @@ const DocxTemplater = require("docxtemplater");
 class InputField {
   constructor({
     name,
+    label,
     description,
     type,
     options,
@@ -15,9 +16,9 @@ class InputField {
   }) {
     this.name = name;
     this.type = type || "string";
+    this.label = label || name;
     this.description = description || "";
     this.dependsOn = dependsOn || null;
-    this.default = default_ || null;
     if (type === "enum") {
       this.options = options;
     }
@@ -26,6 +27,24 @@ class InputField {
     } else {
       this.required = true;
     }
+    if (default_) {
+      this.default = default_;
+    } else {
+      switch (this.type) {
+        case "enum":
+          this.default = this.options[0];
+          break;
+        case "string":
+        case "longText":
+          this.default = "";
+          break;
+        case "boolean":
+          this.default = false;
+          break;
+        default:
+          throw new TypeError(`unknown field type: ${this.type}`);
+      }
+    }
   }
 
   evaluate(input, fieldData) {
@@ -33,16 +52,16 @@ class InputField {
     if (!value && this.default) {
       value = this.default;
     }
-    if (!value && this.required) {
+    if ((value === null || value === "" || typeof value === 'undefined') && this.required) {
       if (this.dependsOn && !fieldData[this.dependsOn]) {
         return value;
       } else {
-        throw new TypeError(`Field ${this.name} is required`);
+        throw new TypeError(`Field is required`);
       }
     }
     if (this.type === "enum" && !this.options.includes(value)) {
       throw new TypeError(
-        `Value of ${this.name} must be one of: ${this.options
+        `Value must be one of: ${this.options
           .map((o) => JSON.stringify(o))
           .join(", ")}`
       );
@@ -61,7 +80,7 @@ class InputField {
       ) {
         value = true;
       } else {
-        throw new TypeError(`Value of ${this.name} must be true/false/yes/no`);
+        throw new TypeError(`Value must be true/false/yes/no`);
       }
     }
     return value;
@@ -118,8 +137,27 @@ class Template {
     this.inputFields = {};
     this.inputFieldList = [];
     yamlData.fields.forEach((definition) => {
-      this.inputFields[definition.name] = new InputField(definition);
-      this.inputFieldList.push(this.inputFields[definition.name]);
+      if (typeof definition.group !== "undefined") {
+        const group = {
+          group: definition.group,
+          label: definition.label,
+          fields: [],
+        };
+        definition.fields.forEach((innerField) => {
+          const fullFieldName = `${group.group}.${innerField.name}`;
+          const label = innerField.label || innerField.name;
+          this.inputFields[fullFieldName] = new InputField({
+            ...innerField,
+            label: label,
+            name: fullFieldName,
+          });
+          group.fields.push(this.inputFields[fullFieldName]);
+        });
+        this.inputFieldList.push(group);
+      } else {
+        this.inputFields[definition.name] = new InputField(definition);
+        this.inputFieldList.push(this.inputFields[definition.name]);
+      }
     });
     this.derivedFields = {};
     this.derivedFieldList = [];
@@ -136,19 +174,31 @@ class Template {
   }
 
   evaluate(input) {
-    const fields = {};
+    const result = { fields: {}, errors: {}, errorCount: 0 };
     Object.entries(this.inputFields).forEach(([fieldName, definition]) => {
-      fields[fieldName] = definition.evaluate(input[fieldName], fields);
+      try {
+        const normalized = definition.evaluate(input[fieldName], result.fields);
+        result.fields[fieldName] = normalized;
+        result.errors[fieldName] = null;
+      } catch (e) {
+        result.fields[fieldName] = input[fieldName];
+        result.errors[fieldName] = e.message;
+        result.errorCount += 1;
+      }
     });
-    Object.entries(this.derivedFields).forEach(([fieldName, definition]) => {
-      fields[fieldName] = derive(definition, fields);
-    });
-    return fields;
+    if (result.errorCount === 0) {
+      Object.entries(this.derivedFields).forEach(([fieldName, definition]) => {
+        result.fields[fieldName] = derive(definition, result.fields);
+      });
+    }
+    return result;
   }
 
   async loadFiles(zipFile) {
     this.documentList.forEach(async (document) => {
-      document.fileContents = await zipFile.file(document.name).async('nodebuffer');
+      document.fileContents = await zipFile
+        .file(document.name)
+        .async("nodebuffer");
     });
   }
 

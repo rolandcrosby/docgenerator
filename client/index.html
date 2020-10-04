@@ -11,14 +11,39 @@
   <body>
     <div class="app">
       <header>
-        <div><button @click="loadTemplate" class="roundButton">Open template</button></div>
+        <div>
+          <button @click="loadTemplate" class="roundButton">
+            Open template
+          </button>
+        </div>
         <h1 v-if="template">{{template.name}}</h1>
       </header>
       <main>
         <div v-if="template">
-          <div v-for="field in template.fields">
-            <label>{{field.description}}<br><input></label>
-          </div>
+          <template v-for="item in template.fields">
+            <template v-if="item.group">
+              <fieldset>
+                <legend>{{item.label}}</legend>
+                <div v-for="inner in item.fields">
+                  <field
+                    v-bind:definition="inner"
+                    v-model="fieldValues[inner.name]"
+                    v-bind:enabled="inner.dependsOn ? fieldValues[inner.dependsOn] : true"
+                    v-bind:error="fieldErrors[inner.name]"
+                  ></field>
+                </div>
+              </fieldset>
+            </template>
+            <template v-else>
+              <field
+                v-bind:definition="item"
+                v-model="fieldValues[item.name]"
+                v-bind:enabled="item.dependsOn ? fieldValues[item.dependsOn] : true"
+                v-bind:error="fieldErrors[item.name]"
+              ></field>
+            </template>
+          </template>
+          <button @click="generate" class="roundButton">Generate Documents</button>
         </div>
       </main>
     </div>
