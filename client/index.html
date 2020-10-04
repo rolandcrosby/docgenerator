@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document Generator</title>
+    <script src="vue.js"></script>
+    <script defer src="client.js"></script>
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <div><button @click="loadTemplate" class="roundButton">Open template</button></div>
+        <h1 v-if="template">{{template.name}}</h1>
+      </header>
+      <main>
+        <div v-if="template">
+          <div v-for="field in template.fields">
+            <label>{{field.description}}<br><input></label>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

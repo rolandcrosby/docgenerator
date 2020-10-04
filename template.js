@@ -1,17 +1,18 @@
-import fs from "fs";
-import path from "path";
+const fs = require("fs");
+const path = require("path");
 
-import DocxTemplater from "docxtemplater";
-import PizZip from "pizzip";
-import yaml from "js-yaml";
-
-export { Template };
+const DocxTemplater = require("docxtemplater");
 
 class InputField {
-  constructor(
+  constructor({
     name,
-    { description, type, options, default: default_, required, dependsOn }
-  ) {
+    description,
+    type,
+    options,
+    default: default_,
+    required,
+    dependsOn,
+  }) {
     this.name = name;
     this.type = type || "string";
     this.description = description || "";
@@ -49,7 +50,9 @@ class InputField {
     if (this.type === "boolean") {
       if (
         value === false ||
-        ["false", "no", "f", "n", "", "1"].includes(value.toString().toLowerCase())
+        ["false", "no", "f", "n", "", "1"].includes(
+          value.toString().toLowerCase()
+        )
       ) {
         value = false;
       } else if (
@@ -110,29 +113,26 @@ function derive(definition, fieldData) {
 }
 
 class Template {
-  constructor(filename) {
-    const yamlData = yaml.load(fs.readFileSync(filename));
+  constructor(yamlData) {
+    this.name = yamlData.name;
     this.inputFields = {};
-    Object.entries(yamlData.fields).forEach(
-      ([name, definition]) =>
-        (this.inputFields[name] = new InputField(name, definition))
-    );
-    this.derivedFields = {};
-    Object.entries(yamlData.derived).forEach(
-      ([name, definition]) => (this.derivedFields[name] = definition)
-    );
-    this.documents = {};
-    Object.entries(yamlData.documents).forEach(([name, definition]) => {
-      this.documents[name] = definition;
-      this.documents[name].data = fs.readFileSync(
-        path.join(path.dirname(filename), path.basename(name)),
-        "binary"
-      );
+    this.inputFieldList = [];
+    yamlData.fields.forEach((definition) => {
+      this.inputFields[definition.name] = new InputField(definition);
+      this.inputFieldList.push(this.inputFields[definition.name]);
     });
-  }
-
-  csv() {
-    return Object.keys(this.inputFields).join(",") + "\n";
+    this.derivedFields = {};
+    this.derivedFieldList = [];
+    yamlData.derived.forEach((definition) => {
+      this.derivedFields[definition.name] = definition;
+      this.derivedFieldList.push(this.derivedFields[definition.name]);
+    });
+    this.documents = {};
+    this.documentList = [];
+    yamlData.documents.forEach((definition) => {
+      this.documents[definition.name] = definition;
+      this.documentList.push(this.documents[definition.name]);
+    });
   }
 
   evaluate(input) {
@@ -144,6 +144,12 @@ class Template {
       fields[fieldName] = derive(definition, fields);
     });
     return fields;
+  }
+
+  async loadFiles(zipFile) {
+    this.documentList.forEach(async (document) => {
+      document.fileContents = await zipFile.file(document.name).async('nodebuffer');
+    });
   }
 
   generateDocuments(input, outDir) {
@@ -163,3 +169,5 @@ class Template {
     });
   }
 }
+
+module.exports = { Template: Template };

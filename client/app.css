@@ -1,0 +1,81 @@
+:root {
+  --purple: rgb(129, 81, 176);
+  --white: #fff;
+  --shadow: #222;
+}
+
+html,
+body,
+h1,
+h2,
+h3,
+p,
+div,
+form,
+ul,
+li,
+blockquote,
+input,
+select,
+button,
+label {
+  margin: 0;
+  padding: 0;
+  font-size: unset;
+  font-weight: normal;
+}
+
+ul,
+li {
+  list-style: none;
+}
+
+body {
+  font-family: Avenir, "Avenir Next", "Century Gothic", sans-serif;
+  padding: 0;
+}
+
+header {
+  background-color: var(--purple);
+  color: var(--white);
+  padding: 10px;
+  display: flex;
+  align-items: baseline;
+}
+
+header h1 {
+  flex: 1;
+  font-weight: bold;
+  font-size: 20px;
+  margin-left: 10px;
+}
+
+input, button, select {
+  font-family: inherit;
+}
+
+header button {
+  background: var(--white);
+  color: var(--purple);
+}
+
+main {
+  background-image: linear-gradient(to bottom, var(--shadow), var(--white));
+  background-position: top left;
+  background-size: auto 3px;
+  background-repeat: no-repeat;
+  padding: 10px;
+  min-height: 1em;
+}
+
+.roundButton {
+  padding: 8px 16px;
+  border-radius: 100px;
+  border-width: 0;
+  box-shadow: 0px 1px 3px var(--shadow);
+}
+
+.roundButton:hover {
+  transform: translate(1px, 1px);
+  box-shadow: -1px 0px 3px var(--shadow);
+}
