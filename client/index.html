@@ -11,8 +11,8 @@
   <body>
     <div class="app">
       <header>
-        <div>
-          <button @click="loadTemplate" class="roundButton">
+        <div v-if="!template">
+          <button @click="loadTemplate" class="round-button">
             Open template
           </button>
         </div>
@@ -24,14 +24,14 @@
             <template v-if="item.group">
               <fieldset>
                 <legend>{{item.label}}</legend>
-                <div v-for="inner in item.fields">
+                <template v-for="inner in item.fields">
                   <field
                     v-bind:definition="inner"
                     v-model="fieldValues[inner.name]"
                     v-bind:enabled="inner.dependsOn ? fieldValues[inner.dependsOn] : true"
                     v-bind:error="fieldErrors[inner.name]"
                   ></field>
-                </div>
+                </template>
               </fieldset>
             </template>
             <template v-else>
@@ -43,7 +43,10 @@
               ></field>
             </template>
           </template>
-          <button @click="generate" class="roundButton">Generate Documents</button>
+          <div class="controls">
+            <button @click="generate" class="round-button">Generate Documents</button>
+            <div v-if="errorCount > 0" class="errors">Please correct the highlighted errors.</div>
+          </div>
         </div>
       </main>
     </div>

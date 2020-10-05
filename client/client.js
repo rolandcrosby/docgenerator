@@ -14,40 +14,46 @@ function defaults(template) {
 
 Vue.component("field", {
   props: ["definition", "value", "enabled", "error"],
-  template: `<div :class="{disabled: !enabled, error: error}" :title="error">
-  <label>{{definition.label}}</label>
+  template: `<div :class="{field: true, disabled: !enabled, error: error}" :title="error">
+  <label class="field-label">{{definition.label}}</label>
   <template v-if="definition.type === 'string'">
-    <input :value="value" :disabled="!enabled" @input="$emit('input', $event.target.value)">
+    <input
+      :value="value"
+      :disabled="!enabled"
+      @input="$emit('input', $event.target.value)">
   </template>
   <template v-else-if="definition.type === 'longText'">
     <textarea :value="value" :disabled="!enabled" @input="$emit('input', $event.target.value)"></textarea>
   </template>
   <template v-else-if="definition.type === 'enum'">
-    <select :value="value" :disabled="!enabled" @input="$emit('input', $event.target.selectedOptions[0].value)">
+    <select
+      :value="value"
+      :disabled="!enabled"
+      @input="$emit('input', $event.target.selectedOptions[0].value)">
       <option v-for="option in definition.options" :value="option">{{option}}</option>
     </select>
   </template>
   <template v-else-if="definition.type === 'boolean'">
-    <label>
-      <input
-        type="radio"
-        value="true"
-        :checked="value"
-        :disabled="!enabled"
-        @change="$emit('input', true)">
-      </input>
-      yes
-    </label>
-    <label>
-      <input
-        type="radio"
-        value="false"
-        :checked="!value"
-        :disabled="!enabled"
-        @change="$emit('input', false)">
-      </input>
-      no
-    </label>
+    <div class="field-radio">
+      <label>
+        <input
+          type="radio"
+          value="true"
+          :checked="value"
+          :disabled="!enabled"
+          @change="$emit('input', true)">
+        yes
+      </label>
+      <label>
+        <input
+          type="radio"
+          value="false"
+          :checked="!value"
+          :disabled="!enabled"
+          @change="$emit('input', false)">
+        no
+      </label>
+    </div>
   </template>
 </div>`,
 });
@@ -59,6 +65,7 @@ const app = new Vue({
     fieldValues: {},
     fieldErrors: {},
     documents: [],
+    errorCount: 0
   },
   methods: {
     loadTemplate: function () {
@@ -74,6 +81,7 @@ const app = new Vue({
         console.log(result);
         this.fieldValues = result.fields;
         this.fieldErrors = result.errors;
+        this.errorCount = result.errorCount;
       });
     },
   },

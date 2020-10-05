@@ -49,9 +49,9 @@ function setupIPC() {
 function startRenderer() {
   function start() {
     const win = new electron.BrowserWindow({
-      width: 450,
+      width: 515,
       height: 600,
-      minWidth: 450,
+      minWidth: 515,
       minHeight: 400,
       webPreferences: {
         contextIsolation: true,
