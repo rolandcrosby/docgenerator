@@ -2,6 +2,8 @@ const fs = require("fs");
 const path = require("path");
 
 const DocxTemplater = require("docxtemplater");
+const PizZip = require("pizzip");
+const { Type } = require("js-yaml");
 
 class InputField {
   constructor({
@@ -13,12 +15,14 @@ class InputField {
     default: default_,
     required,
     dependsOn,
+    placeholder
   }) {
     this.name = name;
     this.type = type || "string";
     this.label = label || name;
     this.description = description || "";
     this.dependsOn = dependsOn || null;
+    this.placeholder = placeholder;
     if (type === "enum") {
       this.options = options;
     }
@@ -52,7 +56,10 @@ class InputField {
     if (!value && this.default) {
       value = this.default;
     }
-    if ((value === null || value === "" || typeof value === 'undefined') && this.required) {
+    if (
+      (value === null || value === "" || typeof value === "undefined") &&
+      this.required
+    ) {
       if (this.dependsOn && !fieldData[this.dependsOn]) {
         return value;
       } else {
@@ -202,21 +209,36 @@ class Template {
     });
   }
 
-  generateDocuments(input, outDir) {
-    const data = this.evaluate(input);
+  generateDocuments(fields, outDir) {
+    const result = { generatedFiles: [], errors: [], errorCount: 0 };
     Object.entries(this.documents).forEach(([_, definition]) => {
-      if (derive(definition.conditions, data)) {
-        const document = new DocxTemplater(new PizZip(definition.data), {
-          delimiters: { start: "[[", end: "]]" },
-        });
-        document.setData(data);
-        document.render();
-        fs.writeFileSync(
-          path.join(outDir, path.basename(data[definition.outFile]) + ".docx"),
-          document.getZip().generate({ type: "nodebuffer" })
+      if (derive(definition.conditions, fields)) {
+        const filename = path.join(
+          outDir,
+          path.basename(fields[definition.outFile]) + ".docx"
         );
+        try {
+          const document = new DocxTemplater(
+            new PizZip(definition.fileContents),
+            {
+              delimiters: { start: "[[", end: "]]" },
+            }
+          );
+          document.setData(fields);
+          document.render();
+          fs.writeFileSync(
+            filename,
+            document.getZip().generate({ type: "nodebuffer" })
+          );
+          result.generatedFiles.push({path: filename, filename: path.basename(filename)});
+        } catch (e) {
+          console.log("error generating document:", e, e.stack)
+          result.errors.push({ filename: filename, error: e.message });
+          result.errorCount += 1;
+        }
       }
     });
+    return result;
   }
 }
 

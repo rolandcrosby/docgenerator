@@ -3,6 +3,7 @@
   --white: #fff;
   --shadow: #222;
   --errorPink: rgb(240, 180, 193);
+  --appFont: Avenir, Avenir Next, "Segoe UI", sans-serif;
 }
 
 html,
@@ -34,7 +35,7 @@ li {
 }
 
 body {
-  font-family: Avenir, "Avenir Next", "Century Gothic", sans-serif;
+  font-family: var(--appFont);
   padding: 0;
 }
 
@@ -147,4 +148,25 @@ textarea {
 
 .controls .errors {
   padding-left: 1em;
+}
+
+a {
+  color:  var(--purple);
+}
+
+.output {
+  min-height: 8em;
+  margin-top: 1em;
+}
+
+ul.documents li::before {
+  content: url(doc16.svg);
+  margin: 0px 6px 0 0;
+  position: relative;
+  top: 2px;
+}
+
+::placeholder {
+  color: #bbb;
+  font-style: italic;
 }

@@ -19,7 +19,7 @@
         <h1 v-if="template">{{template.name}}</h1>
       </header>
       <main>
-        <div v-if="template">
+        <template v-if="template">
           <template v-for="item in template.fields">
             <template v-if="item.group">
               <fieldset>
@@ -44,10 +44,26 @@
             </template>
           </template>
           <div class="controls">
-            <button @click="generate" class="round-button">Generate Documents</button>
-            <div v-if="errorCount > 0" class="errors">Please correct the highlighted errors.</div>
+            <button @click="generate" class="round-button">
+              Generate Documents
+            </button>
+            <div v-if="errorCount > 0" class="errors">
+              Please correct the highlighted errors.
+            </div>
           </div>
-        </div>
+          <div class="output">
+            <fieldset v-if="this.documents.length > 0">
+              <legend>Generated documents:</legend>
+              <ul class="documents">
+                <li v-for="document in this.documents" @click="launch(document.path)">
+                  <a href="javascript:void 0"
+                    >{{document.filename}}</a
+                  >
+                </li>
+              </ul>
+            </fieldset>
+          </div>
+        </template>
       </main>
     </div>
   </body>

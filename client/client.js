@@ -20,6 +20,7 @@ Vue.component("field", {
     <input
       :value="value"
       :disabled="!enabled"
+      :placeholder="definition.placeholder"
       @input="$emit('input', $event.target.value)">
   </template>
   <template v-else-if="definition.type === 'longText'">
@@ -64,25 +65,40 @@ const app = new Vue({
     template: null,
     fieldValues: {},
     fieldErrors: {},
+    errorCount: 0,
     documents: [],
-    errorCount: 0
+    documentErrors: []
   },
   methods: {
+    setTemplate: function(t) {
+      if (t && !t.error) {
+        this.template = t;
+        this.fieldValues = defaults(t);
+      } else {
+        console.error("template error:", t)
+      }
+    },
     loadTemplate: function () {
-      backend.loadTemplate().then((t) => {
-        if (t) {
-          this.template = t;
-          this.fieldValues = defaults(t);
-        }
-      });
+      backend.loadTemplate().then(this.setTemplate);
     },
     generate: function () {
       const result = backend.evaluateTemplate(this.fieldValues).then(result => {
         console.log(result);
-        this.fieldValues = result.fields;
-        this.fieldErrors = result.errors;
-        this.errorCount = result.errorCount;
+        this.fieldValues = result.evaluated.fields;
+        this.fieldErrors = result.evaluated.errors;
+        this.errorCount = result.evaluated.errorCount;
+        if (result.documents) {
+          this.documents = result.documents.generatedFiles;
+          this.documentErrors = result.documents.errors;
+        }
       });
     },
+    launch: function(path) {
+      backend.openPath(path).then(() => {}).catch(() => {});
+    }
   },
+});
+
+backend.onTemplateLoad(function(template) {
+  app.setTemplate(template);
 });

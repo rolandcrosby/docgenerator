@@ -7,4 +7,12 @@ contextBridge.exposeInMainWorld("backend", {
   evaluateTemplate: function (values) {
     return ipcRenderer.invoke("evaluate-template", values);
   },
+  openPath: function (path) {
+    return ipcRenderer.invoke("open-path", path);
+  },
+  onTemplateLoad: function (callback) {
+    ipcRenderer.on("template-loaded", function (_event, ...args) {
+      callback(...args);
+    });
+  },
 });
